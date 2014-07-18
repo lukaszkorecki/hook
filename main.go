@@ -29,18 +29,20 @@ func getAllDirs(root string) []string {
 	return dirs
 }
 
-func runCmd(c string, file string, passArgs bool) {
-	command := strings.Split(c, " ")
+func runCmd(c string, file string, root string, passArgs bool) {
+	command := strings.Split(strings.Trim(c, " "), " ")
 	cmd := exec.Command(command[0])
 
 	var args []string
 	if passArgs {
-		args = append(command[1:], file)
+		args = append(command, file)
 	} else {
-		args = command[1:]
+		args = command
 	}
 
 	cmd.Args = args
+	cmd.Env = os.Environ()
+	cmd.Dir = root
 	out, err := cmd.Output()
 	if err != nil {
 		log.Printf("ERR\n%v", err)
@@ -56,14 +58,11 @@ var (
 )
 
 func main() {
-
 	flag.StringVar(&dir, "dir", ".", "Directory to monitor")
 	flag.StringVar(&command, "cmd", "echo", "Command to run")
 	flag.BoolVar(&passArgs, "args", false, "Pass file path to command?")
 
 	flag.Parse()
-
-	log.Printf("%v %v %v", dir, command, passArgs)
 
 	watchDir, err := filepath.Abs(dir)
 	if err != nil {
@@ -82,13 +81,14 @@ func main() {
 			select {
 			case ev := <-watcher.Event:
 				log.Printf("> %v has changed", ev.Name)
-				runCmd(command, ev.Name, passArgs)
+				runCmd(command, ev.Name, watchDir, passArgs)
 			case err := <-watcher.Error:
 				log.Println("> error:", err)
 			}
 		}
 	}()
 
+	os.Chdir(watchDir)
 	for _, d := range getAllDirs(watchDir) {
 		err = watcher.Watch(d)
 		if err != nil {
