@@ -40,8 +40,6 @@ func runCmd(c string, file string, passArgs bool) {
 		args = command[1:]
 	}
 
-
-
 	cmd.Args = args
 	out, err := cmd.Output()
 	if err != nil {
