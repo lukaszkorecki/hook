@@ -41,14 +41,20 @@ func runCmd(c string, file string, root string, passArgs bool) {
 	}
 
 	cmd.Args = args
-	cmd.Env = os.Environ()
 	cmd.Dir = root
-	out, err := cmd.Output()
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	cmd.Start()
+
+	err := cmd.Wait()
+
 	if err != nil {
 		log.Printf("ERR\n%v", err)
 	}
 
-	fmt.Println(string(out))
+	fmt.Println("Done")
 }
 
 var (
