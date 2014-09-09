@@ -18,6 +18,7 @@ func getAllDirs(root string) []string {
 	fn := func(path string, info os.FileInfo, err error) error {
 		if err == nil {
 			if info.IsDir() {
+				// log.Printf("Adding > %s", path)
 				dirs = append(dirs, path)
 			}
 		}
@@ -86,8 +87,10 @@ func main() {
 		for {
 			select {
 			case ev := <-watcher.Event:
-				log.Printf("> %v has changed", ev.Name)
-				runCmd(command, ev.Name, watchDir, passArgs)
+				// log.Printf("> %v %v has changed", ev.Name, ev)
+				if ev.IsModify() || ev.IsCreate() {
+					runCmd(command, ev.Name, watchDir, passArgs)
+				}
 			case err := <-watcher.Error:
 				log.Println("> error:", err)
 			}
